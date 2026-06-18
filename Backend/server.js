@@ -4,8 +4,16 @@ import connectDB from './src/config/db.js'
 
 const port = config.PORT || 3000
 
-connectDB()
+const startServer = async () => {
+    try {
+        await connectDB()
+        app.listen(port, () => {
+            console.log(`Server is running on port ${port}`)
+        })
+    } catch (error) {
+        console.error('Failed to start server:', error)
+        process.exit(1)
+    }
+}
 
-app.listen(port, () => {
-    console.log("Server is running on port " + port)
-})
+startServer()
