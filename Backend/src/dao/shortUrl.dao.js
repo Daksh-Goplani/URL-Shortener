@@ -12,6 +12,12 @@ export const saveShortUrl = async (url, shortUrl, userId) => {
     return newShortUrl
 }
 
+export const findUrlFromShortUrl = async (shortUrl)=>{
+    const UrlModel = await ShortUrlModel.findOneAndUpdate({ shortUrl: shortUrl }, { $inc: { clicks: 1 } })
+    return UrlModel.fullUrl
+}
+
 export default {
-    saveShortUrl
+    saveShortUrl,
+    findUrlFromShortUrl
 }
