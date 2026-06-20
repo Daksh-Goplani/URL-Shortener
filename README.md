@@ -38,14 +38,19 @@ Frontend/
   package.json
   vite.config.js
   index.html
+  .env
   src/
     App.jsx
     main.jsx
     index.css
+    api/
+      shortUrl.api.js
     components/
       UrlForm.jsx
     pages/
       HomePage.jsx
+    utils/
+      axiosInstance.js
 ```
 
 ---
@@ -145,6 +150,7 @@ Frontend/
 - Vite
 - Tailwind CSS
 - Axios
+- `@tanstack/react-query`
 
 ### UI Components
 
@@ -152,12 +158,22 @@ Frontend/
   - Displays the URL shortener page and renders `UrlForm`
 - `Frontend/src/components/UrlForm.jsx`
   - Accepts a URL input
-  - Sends `POST /api/create` to the backend
+  - Uses `Frontend/src/api/shortUrl.api.js` to call the backend
   - Displays the created short URL with copy support
+
+### Frontend API Layer
+
+- `Frontend/src/api/shortUrl.api.js`
+  - Exposes `createShortUrl(url)`
+  - Uses a shared axios instance for HTTP requests
+- `Frontend/src/utils/axiosInstance.js`
+  - Configures `baseURL` from `import.meta.env.VITE_BACKEND_URL`
+  - Includes response interceptors for common HTTP error handling
 
 ### Frontend Behavior
 
-- Submits a long URL to `http://localhost:3000/api/create`
+- Uses React Query via `Frontend/src/main.jsx` to provide a `QueryClient` context
+- Submits a long URL to the backend using the configured axios instance
 - Receives `{ shortUrl }` and renders a clickable shortened link
 - Supports copying the shortened link to clipboard
 
@@ -197,13 +213,19 @@ npm run dev
 npm install
 ```
 
-3. Start the frontend:
+3. Create or verify `.env` with the backend URL:
+
+```env
+VITE_BACKEND_URL=http://localhost:3000
+```
+
+4. Start the frontend:
 
 ```bash
 npm run dev
 ```
 
-4. Open the Vite-hosted app in the browser (usually `http://localhost:5173`)
+5. Open the Vite-hosted app in the browser (usually `http://localhost:5173`)
 
 ---
 

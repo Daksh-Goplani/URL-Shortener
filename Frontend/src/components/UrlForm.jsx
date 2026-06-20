@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from 'axios'
+import { createShortUrl } from "../api/shortUrl.api";
 
 function UrlForm({ onSubmit }) {
   const [url, setUrl] = useState("");
@@ -8,8 +8,8 @@ function UrlForm({ onSubmit }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { data } = await axios.post(`http://localhost:3000/api/create`, { url });
-    setShortUrl(data.shortUrl);
+    const response = await createShortUrl(url)
+    setShortUrl(response.shortUrl);
     setCopied(false);
   };
 
