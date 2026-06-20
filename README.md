@@ -2,19 +2,15 @@
 
 ## Project Overview
 
-This repository contains a URL shortening service split into two folders:
+This repository contains a full stack URL shortening application with:
 - `Backend/` - Express + MongoDB API for creating and redirecting short URLs
-- `Frontend/` - placeholder for the UI (not documented or implemented yet)
+- `Frontend/` - React + Vite UI for submitting URLs and displaying the shortened link
 
-> The project is currently incomplete. The backend implementation exists and can create short URLs and redirect users to the original URL. The frontend is not yet completed.
+The application lets users submit a long URL, generates a 7-character short code, stores it in MongoDB, and redirects users to the original URL when the short link is visited.
 
 ---
 
-## Backend Technical Documentation
-
-### Architecture
-
-The backend follows a modular structure with separate folders for configuration, routes, controllers, services, data access, models, and utilities.
+## Repository Structure
 
 ```
 Backend/
@@ -38,110 +34,147 @@ Backend/
     utils/
       helper.js
       errorHandler.js
+Frontend/
+  package.json
+  vite.config.js
+  index.html
+  src/
+    App.jsx
+    main.jsx
+    index.css
+    components/
+      UrlForm.jsx
+    pages/
+      HomePage.jsx
 ```
+
+---
+
+## Backend Details
 
 ### Entry Point
 
 - `Backend/server.js`
-  - Imports Express app from `src/app.js`
-  - Loads environment configuration from `src/config/config.js`
+  - Loads environment variables and configuration
   - Connects to MongoDB via `src/config/db.js`
-  - Starts the HTTP server on the port defined by `PORT`
+  - Starts the Express server on `PORT`
 
 ### Express App
 
 - `Backend/src/app.js`
-  - Creates the Express app
-  - Registers JSON and URL-encoded parsers
-  - Mounts the URL route module at the root path
-  - Registers centralized error-handling middleware after routes
+  - Sets up `cors`, JSON request parsing, and URL-encoded parsing
+  - Mounts the URL route module at the application root
+  - Applies centralized error-handling middleware
 
-### Routing
+### Routes
 
-- `Backend/src/routes/shortUrl.routes.js`
-  - `POST /api/create` - Create a new shortened URL
-  - `GET /:shortUrl` - Redirect to the original URL if the short code exists
+- `POST /api/create`
+  - Creates a new shortened URL from a JSON body containing `{ url }`
+- `GET /:shortUrl`
+  - Redirects to the original URL for a given short code
 
 ### Controller Layer
 
 - `Backend/src/controller/shortUrl.controller.js`
   - `createShortUrl(req, res)`
-    - Validates `url` in the POST request body
-    - Calls `createShortUrlWithoutUserService(url)`
-    - Returns the generated short URL using the configured `APP_URL`
+    - Validates that `url` is provided
+    - Calls the service to generate and save a short code
+    - Returns the full shortened URL using `APP_URL`
   - `redirectToFullUrl(req, res)`
-    - Reads `shortUrl` from route params
-    - Uses DAO to look up the original URL and increment click count
-    - Redirects to the original URL or returns 404 if not found
+    - Looks up the long URL by the short code
+    - Redirects the client to the original URL
 
 ### Service Layer
 
 - `Backend/src/services/shortUrl.service.js`
-  - `createShortUrlWithoutUserService(url)`
-    - Generates a 7-character nanoid
-    - Validates generated short ID and propagates errors
-    - Saves the shortened URL via DAO
-  - `createShortUrlWithUserService(url, userId)`
-    - Similar to the non-user service but includes a `userId` field
-    - Also validates generated short ID and propagates errors
+  - Generates a 7-character short ID with `nanoid`
+  - Calls DAO methods to persist the URL mapping
+  - Returns the generated short code
 
-### Data Access Layer (DAO)
+### Data Access Layer
 
 - `Backend/src/dao/shortUrl.dao.js`
   - `saveShortUrl(url, shortUrl, userId)`
-    - Creates a new `ShortUrlModel` document with `fullUrl`, `shortUrl`, and optional `user`
-    - Saves it to MongoDB
-    - Throws a `ConflictError` when a duplicate short code is detected
+    - Creates and saves a `ShortUrl` document
+    - Handles duplicate short code conflicts
   - `findUrlFromShortUrl(shortUrl)`
-    - Finds the URL document by its short code
-    - Increments the `clicks` counter using `findOneAndUpdate`
-    - Throws `NotFoundError` when the code does not exist
-    - Returns `fullUrl`
+    - Finds the stored URL by code and increments the `clicks` counter
+    - Throws a 404-style error if not found
 
-### Mongoose Model
+### Model
 
 - `Backend/src/models/shortUrl.model.js`
-  - Defines the `ShortUrl` schema with fields:
-    - `fullUrl` - required string
-    - `shortUrl` - required, unique, indexed string
-    - `clicks` - number defaulting to `0`
-    - `user` - optional ObjectId referencing `User`
+  - Defines the `ShortUrl` schema with:
+    - `fullUrl` (required string)
+    - `shortUrl` (required unique string)
+    - `clicks` (number, default `0`)
+    - `user` (optional `ObjectId` reference to `User`)
 
 ### Utilities
 
 - `Backend/src/utils/helper.js`
-  - Exposes `generateNanoid(length)` using the `nanoid` package
-  - Used by services to create short URL strings
+  - Generates unique short IDs using `nanoid`
 - `Backend/src/utils/errorHandler.js`
-  - Defines `AppError` and specialized error classes (`BadRequestError`, `NotFoundError`, `ConflictError`, `UnauthorizedError`)
-  - Provides centralized Express error middleware that returns structured JSON error responses
+  - Defines `AppError` and custom error subclasses
+  - Provides Express error middleware for structured JSON responses
 
 ### Configuration
 
 - `Backend/src/config/config.js`
   - Loads environment variables with `dotenv`
-  - Validates required values: `PORT`, `MONGO_URI`, `APP_URL`
-  - Exports a config object for use by the app
+  - Requires `PORT`, `MONGO_URI`, and `APP_URL`
 - `Backend/src/config/db.js`
-  - Connects to MongoDB with Mongoose using `MONGO_URI`
-  - Logs success or exits the process on failure
+  - Connects to MongoDB using Mongoose
+  - Logs connection success or exits on failure
 
-### Dependencies
+### Backend Dependencies
 
-- `express` - HTTP server and routing
-- `mongoose` - MongoDB ODM
-- `dotenv` - Environment variables
-- `nanoid` - Short unique ID generation
+- `express`
+- `mongoose`
+- `dotenv`
+- `cors`
+- `nanoid`
 
-### Environment Variables
+---
 
-The backend requires the following environment variables:
+## Frontend Details
 
-- `PORT` - port for the Express server
-- `MONGO_URI` - MongoDB connection string
-- `APP_URL` - public base URL used when returning short links
+### Frontend Stack
 
-Example `.env` file:
+- React
+- Vite
+- Tailwind CSS
+- Axios
+
+### UI Components
+
+- `Frontend/src/pages/HomePage.jsx`
+  - Displays the URL shortener page and renders `UrlForm`
+- `Frontend/src/components/UrlForm.jsx`
+  - Accepts a URL input
+  - Sends `POST /api/create` to the backend
+  - Displays the created short URL with copy support
+
+### Frontend Behavior
+
+- Submits a long URL to `http://localhost:3000/api/create`
+- Receives `{ shortUrl }` and renders a clickable shortened link
+- Supports copying the shortened link to clipboard
+
+---
+
+## Running the Project
+
+### Backend
+
+1. Open `Backend/`
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Create a `.env` file with:
 
 ```env
 PORT=3000
@@ -149,32 +182,41 @@ MONGO_URI=mongodb://localhost:27017/url_shortener
 APP_URL=http://localhost:3000
 ```
 
-### How to Run
-
-From `Backend/`:
+4. Start the backend:
 
 ```bash
-npm install
 npm run dev
 ```
 
-### Current Limitations / Incomplete Areas
+### Frontend
 
-- No frontend implementation is documented in this README
-- There is no authentication or user management in place
-- The `User` reference exists in the schema but no `User` model or user routes are implemented
-- There is no validation of URL format beyond presence
-- There are no tests, error handling is minimal, and no production deployment documentation is provided
+1. Open `Frontend/`
+2. Install dependencies:
 
-### Future Improvements
+```bash
+npm install
+```
 
-- Add frontend UI in `Frontend/`
-- Implement user registration/login and authenticated URL creation
-- Add URL format validation and duplicate short code handling
-- Add rate limiting, logging, and production-ready error handling
+3. Start the frontend:
+
+```bash
+npm run dev
+```
+
+4. Open the Vite-hosted app in the browser (usually `http://localhost:5173`)
+
+---
+
+## Current Limitations
+
+- No authentication or user account flow is implemented
+- URL validation is only enforced by the frontend input type and not fully validated on the backend
+- The `user` field exists on the URL model but there is no `User` model or user routes yet
+- No test suite is included
+- Production deployment, logging, and rate limiting are not implemented
 
 ---
 
 ## Notes
 
-This README documents the current backend modules and their relationships. The application is a work in progress and the structure may expand as user management and frontend features are added.
+This README now reflects the current project state with both backend API and frontend UI implemented. The backend can create short URLs, redirect them, and the frontend can submit a URL and display the resulting short link.
