@@ -2,11 +2,12 @@
 
 ## Project Overview
 
-This repository contains a full stack URL shortening application with:
-- `Backend/` - Express + MongoDB API for creating and redirecting short URLs, plus backend auth-ready routes
-- `Frontend/` - React + Vite UI for submitting URLs and displaying the shortened link
+This repository contains a full-stack URL shortening application.
 
-The application lets users submit a long URL, generates a 7-character short code, stores it in MongoDB, and redirects users to the original URL when the short link is visited.
+- `Backend/` - Express + MongoDB API for creating short URLs, redirecting them, and handling JWT cookie auth.
+- `Frontend/` - React + Vite UI for submitting URLs and displaying shortened links.
+
+The app lets users submit a long URL, generates a 7-character short code, stores it in MongoDB, and redirects visitors to the original URL when the short code is accessed.
 
 ---
 
@@ -39,13 +40,13 @@ Backend/
       auth.service.js
       shortUrl.service.js
     utils/
+      attachUser.js
       helper.js
       errorHandler.js
 Frontend/
   package.json
   vite.config.js
   index.html
-  .env
   src/
     App.jsx
     main.jsx
@@ -67,111 +68,107 @@ Frontend/
 ### Entry Point
 
 - `Backend/server.js`
-  - Loads environment variables and configuration
-  - Connects to MongoDB via `src/config/db.js`
-  - Starts the Express server on `PORT`
+  - Loads environment variables and starts the application.
+  - Connects to MongoDB via `Backend/src/config/db.js`.
 
 ### Express App
 
 - `Backend/src/app.js`
-  - Sets up `cors`, JSON request parsing, and URL-encoded parsing
-  - Mounts URL and auth route modules
-  - Applies centralized error-handling middleware
+  - Configures CORS with `CLIENT_URL` and credentials support.
+  - Parses JSON and URL-encoded bodies.
+  - Uses `cookie-parser`.
+  - Attaches user info from the JWT cookie using `Backend/src/utils/attachUser.js`.
+  - Mounts short URL and auth routes.
+  - Uses centralized error handling.
 
 ### Routes
 
 - `POST /api/create`
-  - Creates a new shortened URL from a JSON body containing `{ url }`
+  - Creates a new shortened URL from `{ url }`.
+  - If a logged-in user sends an optional `slug`, it will be used as a custom short code.
 - `GET /:shortUrl`
-  - Redirects to the original URL for a given short code
+  - Redirects to the original URL for the given short code.
 - `POST /api/auth/register`
-  - Registers a new user and sets an access token cookie
+  - Registers a new user and sets an `accessToken` cookie.
 - `POST /api/auth/login`
-  - Logs in an existing user and sets an access token cookie
+  - Authenticates a user and sets an `accessToken` cookie.
 
 ### Controller Layer
 
 - `Backend/src/controller/shortUrl.controller.js`
   - `createShortUrl(req, res)`
-    - Validates that `url` is provided
-    - Calls the service to generate and save a short code
-    - Returns the full shortened URL using `APP_URL`
+    - Validates required `url` input.
+    - Chooses user-specific or anonymous short URL creation based on `req.user`.
+    - Returns the full shortened URL using `APP_URL`.
   - `redirectToFullUrl(req, res)`
-    - Looks up the long URL by the short code
-    - Redirects the client to the original URL
+    - Looks up the long URL by code.
+    - Redirects the client.
 - `Backend/src/controller/auth.controller.js`
   - `register(req, res)`
-    - Creates a new user and issues a JWT cookie
+    - Registers a user, issues JWT cookie, and sends a success message.
   - `login(req, res)`
-    - Authenticates an existing user and issues a JWT cookie
+    - Verifies credentials, issues JWT cookie, and sends a success message.
 
 ### Service Layer
 
 - `Backend/src/services/shortUrl.service.js`
-  - Generates a 7-character short ID with `nanoid`
-  - Persists the URL mapping with optional user association
+  - `createShortUrlWithoutUserService(url)` generates a new short code and saves it.
+  - `createShortUrlWithUserService(url, userId, slug)` supports user-linked short URLs and optional custom slugs.
 - `Backend/src/services/auth.service.js`
-  - Registers users with hashed passwords
-  - Authenticates users and returns JWT tokens
+  - Creates users with hashed passwords.
+  - Signs JWTs with payload `{ id: user._id }`.
+  - Validates login credentials.
 
 ### Data Access Layer
 
 - `Backend/src/dao/shortUrl.dao.js`
-  - `saveShortUrl(url, shortUrl, userId)`
-    - Creates and saves a `ShortUrl` document
-    - Optionally links a short URL to a user
-    - Handles duplicate short code conflicts
-  - `findUrlFromShortUrl(shortUrl)`
-    - Finds the stored URL by code and increments the `clicks` counter
-    - Throws a 404-style error if not found
+  - Saves short URLs to MongoDB and links them to a user if present.
+  - Finds stored URLs by short code and increments click counts.
 - `Backend/src/dao/user.dao.js`
-  - `findUserByEmail(email)`
-  - `findUserById(id)`
-  - `createUser(name, email, password)`
+  - Finds users by email or by raw MongoDB `_id`.
+  - Creates new users.
 
 ### Models
 
 - `Backend/src/models/shortUrl.model.js`
-  - Defines the `ShortUrl` schema with:
-    - `fullUrl` (required string)
-    - `shortUrl` (required unique string)
-    - `clicks` (number, default `0`)
-    - `user` (optional `ObjectId` reference to `User`)
+  - `fullUrl` (required string)
+  - `shortUrl` (required unique string)
+  - `clicks` (number, default `0`)
+  - `user` (optional `ObjectId` reference to `User`)
 - `Backend/src/models/user.model.js`
-  - Defines the `User` schema with:
-    - `name` (required string)
-    - `email` (required unique string)
-    - `password` (required string)
-    - `avatar` (optional string with a default image URL)
+  - `name` (required string)
+  - `email` (required unique string)
+  - `password` (required string)
+  - `avatar` (optional string with default image URL)
 
 ### Middleware
 
+- `Backend/src/utils/attachUser.js`
+  - Reads `accessToken` cookie.
+  - Verifies JWT and loads the matching user.
+  - Sets `req.user` when a valid token is present.
 - `Backend/src/middleware/auth.middleware.js`
-  - Verifies JWT tokens from `accessToken` cookies
-  - Attaches authenticated user data to `req.user`
-  - Returns `401 Unauthorized` if authentication fails
+  - Verifies JWT and rejects unauthorized requests with `401`.
 
 ### Utilities
 
 - `Backend/src/utils/helper.js`
-  - Generates unique short IDs using `nanoid`
+  - Generates unique nanoid values for short URLs.
 - `Backend/src/utils/errorHandler.js`
-  - Defines `AppError` and custom error classes
-  - Provides Express error middleware for structured JSON responses
+  - Provides custom errors and Express error middleware.
 
 ### Configuration
 
 - `Backend/src/config/config.js`
-  - Loads environment variables with `dotenv`
-  - Requires `PORT`, `MONGO_URI`, `APP_URL`, and `JWT_SECRET`
-  - Exports cookie options for secure cookie handling
+  - Loads environment variables and validates required keys.
+  - Exports `APP_URL`, `MONGO_URI`, `PORT`, and `JWT_SECRET`.
 - `Backend/src/config/db.js`
-  - Connects to MongoDB using Mongoose
-  - Logs connection success or exits on failure
+  - Connects to MongoDB with Mongoose.
 
 ### Backend Dependencies
 
 - `bcryptjs`
+- `cookie-parser`
 - `cors`
 - `dotenv`
 - `express`
@@ -183,7 +180,7 @@ Frontend/
 
 ## Frontend Details
 
-### Frontend Stack
+### Stack
 
 - React
 - Vite
@@ -194,27 +191,23 @@ Frontend/
 ### UI Components
 
 - `Frontend/src/pages/HomePage.jsx`
-  - Displays the URL shortener page and renders `UrlForm`
+  - Displays the URL shortener page.
 - `Frontend/src/components/UrlForm.jsx`
-  - Accepts a URL input
-  - Uses `Frontend/src/api/shortUrl.api.js` to call the backend
-  - Displays the created short URL with copy support
+  - Accepts a long URL and submits it to the backend.
+  - Renders the returned shortened link.
 
-### Frontend API Layer
+### API Layer
 
 - `Frontend/src/api/shortUrl.api.js`
-  - Exposes `createShortUrl(url)`
-  - Uses a shared axios instance for HTTP requests
+  - Sends URL creation requests to the backend.
 - `Frontend/src/utils/axiosInstance.js`
-  - Configures `baseURL` from `import.meta.env.VITE_BACKEND_URL`
-  - Includes response interceptors for common HTTP error handling
+  - Configures the backend base URL from `VITE_BACKEND_URL`.
 
-### Frontend Behavior
+### Behavior
 
-- Uses React Query via `Frontend/src/main.jsx` to provide a `QueryClient` context
-- Submits a long URL to the backend using the configured axios instance
-- Receives `{ shortUrl }` and renders a clickable shortened link
-- Supports copying the shortened link to clipboard
+- Uses React Query in `Frontend/src/main.jsx`.
+- Submits URLs and displays shortened links.
+- Supports clipboard copy for generated links.
 
 ---
 
@@ -254,10 +247,16 @@ npm run dev
 npm install
 ```
 
-3. Create or verify `.env` with the backend URL:
+3. Create or verify `.env` with:
 
 ```env
 VITE_BACKEND_URL=http://localhost:3000
+```
+
+4. Start the frontend:
+
+```bash
+npm run dev
 ```
 
 4. Start the frontend:

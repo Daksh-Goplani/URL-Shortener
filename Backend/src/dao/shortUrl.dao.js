@@ -34,7 +34,12 @@ export const findUrlFromShortUrl = async (shortUrl) => {
     return urlModel.fullUrl
 }
 
+const getCustomShortUrl = async (slug)=>{
+    return await ShortUrlModel.findOne({shortUrl:slug})
+}
+
 export default {
     saveShortUrl,
-    findUrlFromShortUrl
+    findUrlFromShortUrl,
+    getCustomShortUrl
 }

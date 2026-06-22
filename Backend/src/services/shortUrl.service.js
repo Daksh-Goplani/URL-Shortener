@@ -14,12 +14,14 @@ export const createShortUrlWithoutUserService = async (url) => {
     }
 }
 
-export const createShortUrlWithUserService = async (url, userId) => {
+export const createShortUrlWithUserService = async (url, userId, slug = null) => {
     try {
-        const shortUrl = generateNanoid(7)
+        const shortUrl = slug || generateNanoid(7)
         if (!shortUrl) {
             throw new Error("Failed to generate short URL")
         }
+        const exist = await shortUrlDao.getCustomShortUrl(slug)
+        if(exist) throw new Error("Short URL Already Exists")
         await shortUrlDao.saveShortUrl(url, shortUrl, userId)
         return { shortUrl }
     } catch (error) {

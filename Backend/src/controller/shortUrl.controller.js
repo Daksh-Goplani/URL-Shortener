@@ -1,4 +1,4 @@
-import { createShortUrlWithoutUserService } from "../services/shortUrl.service.js";
+import { createShortUrlWithoutUserService, createShortUrlWithUserService } from "../services/shortUrl.service.js";
 import config from "../config/config.js";
 import shortUrlDao from "../dao/shortUrl.dao.js";
 import { BadRequestError } from "../utils/errorHandler.js";
@@ -10,11 +10,17 @@ import { BadRequestError } from "../utils/errorHandler.js";
  */
 export const createShortUrl = async (req, res, next) => {
     try {
-        const { url } = req.body
-        if (!url) {
+        const data = req.body
+        if (!data.url) {
             throw new BadRequestError("URL is required")
         }
-        const shortUrl = await createShortUrlWithoutUserService(url)
+        let shortUrl
+        console.log(req.user, 'req user')
+        if (req.user) {
+            shortUrl = await createShortUrlWithUserService(data.url, req.user._id, data?.slug)
+        } else {
+            shortUrl = await createShortUrlWithoutUserService(data.url)
+        }
         res.status(201).json({ shortUrl: `${config.APP_URL}/${shortUrl.shortUrl}` })
     } catch (error) {
         next(error)

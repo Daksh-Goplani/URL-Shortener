@@ -6,7 +6,8 @@ export const findUserByEmail = async (email)=>{
 }
 
 export const findUserById = async (id)=>{
-    return await userModel.findById({id})
+    const userId = typeof id === 'object' && id?.id ? id.id : id
+    return await userModel.findById(userId)
 }
 
 export const createUser = async (name, email, password) => {
