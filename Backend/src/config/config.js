@@ -13,12 +13,16 @@ if (!process.env.APP_URL) {
 if (!process.env.JWT_SECRET) {
     throw new Error("JWT_SECRET is not defined in environment variable")
 }
+if(!process.env.CLIENT_URL){
+    throw new Error("JWT_SECRET is not defined in environment variable")
+}
 
 const config = {
     PORT: process.env.PORT,
     MONGO_URI: process.env.MONGO_URI,
     APP_URL: process.env.APP_URL,
-    JWT_SECRET: process.env.JWT_SECRET
+    JWT_SECRET: process.env.JWT_SECRET,
+    CLIENT_URL: process.env.CLIENT_URL
 }
 
 export const cookieOptions = {

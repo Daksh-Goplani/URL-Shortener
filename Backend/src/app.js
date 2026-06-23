@@ -5,10 +5,11 @@ import cors from 'cors'
 import authRoutes from './routes/auth.routes.js'
 import { attachUser } from './utils/attachUser.js'
 import cookieParser from 'cookie-parser'
+import config from './config/config.js'
 
 const app = express()
 app.use(cors({
-    origin: process.env.CLIENT_URL,
+    origin: config.CLIENT_URL,
     credentials: true,
 }));
 app.use(express.json())
