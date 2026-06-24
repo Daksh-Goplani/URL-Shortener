@@ -5,9 +5,9 @@
 This repository contains a full-stack URL shortening application.
 
 - `Backend/` - Express + MongoDB API for creating short URLs, redirecting them, and handling JWT cookie auth.
-- `Frontend/` - React + Vite UI for submitting URLs and displaying shortened links.
+- `Frontend/` - React + Vite UI for submitting URLs, displaying shortened links, and auth navigation.
 
-The app lets users submit a long URL, generates a 7-character short code, stores it in MongoDB, and redirects visitors to the original URL when the short code is accessed.
+The app lets users submit a long URL, generates a short code, stores it in MongoDB, and redirects visitors to the original URL when the short code is accessed.
 
 ---
 
@@ -45,6 +45,7 @@ Backend/
       errorHandler.js
 Frontend/
   package.json
+  package-lock.json
   vite.config.js
   index.html
   src/
@@ -53,10 +54,21 @@ Frontend/
     index.css
     api/
       shortUrl.api.js
+      user.api.js
     components/
+      Navbar.jsx
       UrlForm.jsx
+      LoginForm.jsx
+      RegisterForm.jsx
     pages/
       HomePage.jsx
+      AuthPage.jsx
+      DashboardPage.jsx
+    routing/
+      auth.route.js
+      dashboard.js
+      homepage.js
+      routeTree.js
     utils/
       axiosInstance.js
 ```
@@ -187,19 +199,43 @@ Frontend/
 - Tailwind CSS
 - Axios
 - `@tanstack/react-query`
+- `@tanstack/react-router`
 
 ### UI Components
 
-- `Frontend/src/pages/HomePage.jsx`
-  - Displays the URL shortener page.
+- `Frontend/src/components/Navbar.jsx`
+  - Renders the app title and a `Login` link.
 - `Frontend/src/components/UrlForm.jsx`
   - Accepts a long URL and submits it to the backend.
   - Renders the returned shortened link.
+- `Frontend/src/components/LoginForm.jsx`
+  - Authenticates users through the backend login endpoint.
+- `Frontend/src/components/RegisterForm.jsx`
+  - Registers new users through the backend register endpoint.
+- `Frontend/src/pages/HomePage.jsx`
+  - Shows the URL shortener form.
+- `Frontend/src/pages/AuthPage.jsx`
+  - Switches between login and register views.
+- `Frontend/src/pages/DashboardPage.jsx`
+  - Placeholder dashboard page.
+
+### Routing
+
+- `Frontend/src/routing/routeTree.js`
+  - Defines the root route and child routes.
+- `Frontend/src/routing/homepage.js`
+  - Home page route.
+- `Frontend/src/routing/auth.route.js`
+  - `/auth` route for the auth page.
+- `Frontend/src/routing/dashboard.js`
+  - `/dashboard` route for the dashboard page.
 
 ### API Layer
 
 - `Frontend/src/api/shortUrl.api.js`
   - Sends URL creation requests to the backend.
+- `Frontend/src/api/user.api.js`
+  - Sends login/register requests to the backend.
 - `Frontend/src/utils/axiosInstance.js`
   - Configures the backend base URL from `VITE_BACKEND_URL`.
 
@@ -207,7 +243,8 @@ Frontend/
 
 - Uses React Query in `Frontend/src/main.jsx`.
 - Submits URLs and displays shortened links.
-- Supports clipboard copy for generated links.
+- Includes a navbar with auth navigation.
+- Provides login and registration UI flows.
 
 ---
 
@@ -271,14 +308,13 @@ npm run dev
 
 ## Current Limitations
 
-- Frontend does not yet implement authentication flows for register/login
-- URL validation is only enforced by the frontend input type and not fully validated on the backend
-- User-linked URL creation is available in the backend service layer, but not currently used by the public create endpoint
-- No test suite is included
-- Production deployment, logging, and rate limiting are not implemented
+- Login and register UI exist, but protected route handling and post-login redirects are not fully wired.
+- URL validation is still primarily frontend-side and should be reinforced on the backend.
+- The dashboard route exists, but the dashboard feature is not fully implemented.
+- No test suite is included.
 
 ---
 
 ## Notes
 
-This README now reflects the current project state with both backend API and frontend UI implemented. The backend can create and redirect short URLs and includes backend auth-ready routes; the frontend submits a URL and displays the resulting short link.
+This README now reflects the current project state with backend auth routes and frontend auth UI. The backend can create and redirect short URLs and supports JWT cookie authentication; the frontend renders the shortener form, auth page, and navbar navigation.
