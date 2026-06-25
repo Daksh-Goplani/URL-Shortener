@@ -25,17 +25,17 @@ export const registerUser = async (name, email, password) => {
         { expiresIn: "1d" }
     );
 
-    return token;
+    return {token, user: newUser};
 };
 
 export const loginUser = async (email, password) => {
-    const user = await userDao.findUserByEmail(email);
+    const user = await userDao.findUserByEmailAndPassword(email);
 
     if (!user) {
         throw new UnauthorizedError("Invalid credentials");
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
         throw new UnauthorizedError("Invalid credentials");

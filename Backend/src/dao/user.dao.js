@@ -5,6 +5,10 @@ export const findUserByEmail = async (email)=>{
     return await userModel.findOne({email})
 }
 
+export const findUserByEmailAndPassword = async (email)=>{
+    return await userModel.findOne({email}).select("+password")
+}
+
 export const findUserById = async (id)=>{
     const userId = typeof id === 'object' && id?.id ? id.id : id
     return await userModel.findById(userId)
@@ -24,5 +28,6 @@ export default {
     findUserByEmail,
     findUserById,
     createUser,
-    getAllUserUrlsDao
+    getAllUserUrlsDao,
+    findUserByEmailAndPassword
 }

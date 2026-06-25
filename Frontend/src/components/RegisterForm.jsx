@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { registerUser } from '../api/user.api';
 
-export default function RegisterForm({state}) {
+export default function RegisterForm({ state }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -173,8 +173,8 @@ export default function RegisterForm({state}) {
         {/* Login Link */}
         <div className="text-center mt-6 text-sm text-gray-600">
           Already have an account?{' '}
-          <span onClick={()=>state(true)} className="text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer">
-            Sign in
+          <span onClick={() => state(true)} className="text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer">
+            Login
           </span>
         </div>
       </div>

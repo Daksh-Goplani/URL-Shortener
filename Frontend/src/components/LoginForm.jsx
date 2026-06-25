@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { loginUser } from '../api/user.api';
+import { useDispatch, useSelector } from 'react-redux'
+import {login} from '../store/slice/authSlice.js'
 
 export default function LoginForm({ state }) {
     const [email, setEmail] = useState('');
@@ -7,6 +9,8 @@ export default function LoginForm({ state }) {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const auth = useSelector((state) => state.auth)
+    const dispatch = useDispatch()
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -26,7 +30,7 @@ export default function LoginForm({ state }) {
         try {
             setLoading(true);
             const response = await loginUser(password, email);
-            console.log('Login successful:', response);
+            dispatch(login(response.user))
             // Handle successful login (redirect, store token, etc.)
         } catch (err) {
             setError(err.message || err.response?.data?.message || 'Login failed. Please try again.');
@@ -105,7 +109,7 @@ export default function LoginForm({ state }) {
                 {/* Sign Up Link */}
                 <div className="text-center mt-6 text-sm text-gray-600">
                     Don't have an account?{' '}
-                    <span onClick={()=>state(false)} href="#" className="text-indigo-600 cursor-pointer hover:text-indigo-800 font-semibold">
+                    <span onClick={() => state(false)} href="#" className="text-indigo-600 cursor-pointer hover:text-indigo-800 font-semibold">
                         Sign up
                     </span>
                 </div>
