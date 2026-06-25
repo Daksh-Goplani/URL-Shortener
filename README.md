@@ -4,10 +4,10 @@
 
 This repository contains a full-stack URL shortening application.
 
-- `Backend/` - Express + MongoDB API for creating short URLs, redirecting them, and handling JWT cookie auth.
-- `Frontend/` - React + Vite UI for submitting URLs, displaying shortened links, and auth navigation.
+- `Backend/` - Express + MongoDB API for creating short URLs, redirecting them, and handling JWT cookie authentication.
+- `Frontend/` - React + Vite UI for submitting URLs, showing shortened links, and login/register flows.
 
-The app lets users submit a long URL, generates a short code, stores it in MongoDB, and redirects visitors to the original URL when the short code is accessed.
+Users can shorten a URL through the frontend, receive a short link, and the backend redirects visitors from the short code to the original full URL.
 
 ---
 
@@ -89,7 +89,7 @@ Frontend/
   - Configures CORS with `CLIENT_URL` and credentials support.
   - Parses JSON and URL-encoded bodies.
   - Uses `cookie-parser`.
-  - Attaches user info from the JWT cookie using `Backend/src/utils/attachUser.js`.
+  - Attaches user info from the JWT cookie via `Backend/src/utils/attachUser.js`.
   - Mounts short URL and auth routes.
   - Uses centralized error handling.
 
@@ -97,47 +97,43 @@ Frontend/
 
 - `POST /api/create`
   - Creates a new shortened URL from `{ url }`.
-  - If a logged-in user sends an optional `slug`, it will be used as a custom short code.
+  - If a logged-in user provides `slug`, it can be used as a custom short code.
 - `GET /:shortUrl`
   - Redirects to the original URL for the given short code.
 - `POST /api/auth/register`
   - Registers a new user and sets an `accessToken` cookie.
 - `POST /api/auth/login`
   - Authenticates a user and sets an `accessToken` cookie.
+- `GET /api/auth/me`
+  - Returns the authenticated user when a valid JWT cookie is present.
 
 ### Controller Layer
 
 - `Backend/src/controller/shortUrl.controller.js`
-  - `createShortUrl(req, res)`
-    - Validates required `url` input.
-    - Chooses user-specific or anonymous short URL creation based on `req.user`.
-    - Returns the full shortened URL using `APP_URL`.
-  - `redirectToFullUrl(req, res)`
-    - Looks up the long URL by code.
-    - Redirects the client.
+  - `createShortUrl(req, res)` validates URL input, creates a short URL, and returns the full shortened link.
+  - `redirectToFullUrl(req, res)` finds the original URL and redirects the client.
 - `Backend/src/controller/auth.controller.js`
-  - `register(req, res)`
-    - Registers a user, issues JWT cookie, and sends a success message.
-  - `login(req, res)`
-    - Verifies credentials, issues JWT cookie, and sends a success message.
+  - `register(req, res)` registers a user, issues a JWT cookie, and returns a success message.
+  - `login(req, res)` authenticates a user, issues a JWT cookie, and returns user data.
+  - `getCurrentUser(req, res)` returns the logged-in user object.
 
 ### Service Layer
 
 - `Backend/src/services/shortUrl.service.js`
-  - `createShortUrlWithoutUserService(url)` generates a new short code and saves it.
-  - `createShortUrlWithUserService(url, userId, slug)` supports user-linked short URLs and optional custom slugs.
+  - `createShortUrlWithoutUserService(url)` generates a random short code.
+  - `createShortUrlWithUserService(url, userId, slug)` creates a user-linked short URL with optional custom slug support.
 - `Backend/src/services/auth.service.js`
-  - Creates users with hashed passwords.
-  - Signs JWTs with payload `{ id: user._id }`.
+  - Registers users with hashed passwords.
   - Validates login credentials.
+  - Signs JWT tokens with payload `{ id: user._id }`.
 
 ### Data Access Layer
 
 - `Backend/src/dao/shortUrl.dao.js`
-  - Saves short URLs to MongoDB and links them to a user if present.
-  - Finds stored URLs by short code and increments click counts.
+  - Saves short URLs to MongoDB and links them to a user when provided.
+  - Looks up a short code and increments its click count.
 - `Backend/src/dao/user.dao.js`
-  - Finds users by email or by raw MongoDB `_id`.
+  - Finds users by email or by MongoDB `_id`.
   - Creates new users.
 
 ### Models
@@ -151,31 +147,29 @@ Frontend/
   - `name` (required string)
   - `email` (required unique string)
   - `password` (required string)
-  - `avatar` (optional string with default image URL)
+  - `avatar` (optional string with a default image URL)
 
 ### Middleware
 
 - `Backend/src/utils/attachUser.js`
-  - Reads `accessToken` cookie.
-  - Verifies JWT and loads the matching user.
-  - Sets `req.user` when a valid token is present.
+  - Reads `accessToken` cookie, verifies JWT, and sets `req.user`.
 - `Backend/src/middleware/auth.middleware.js`
-  - Verifies JWT and rejects unauthorized requests with `401`.
+  - Protects routes and rejects unauthorized requests with `401`.
 
 ### Utilities
 
 - `Backend/src/utils/helper.js`
   - Generates unique nanoid values for short URLs.
 - `Backend/src/utils/errorHandler.js`
-  - Provides custom errors and Express error middleware.
+  - Provides custom error classes and Express error-handling middleware.
 
 ### Configuration
 
 - `Backend/src/config/config.js`
-  - Loads environment variables and validates required keys.
-  - Exports `APP_URL`, `MONGO_URI`, `PORT`, and `JWT_SECRET`.
+  - Loads and validates required environment variables.
+  - Exports `APP_URL`, `MONGO_URI`, `PORT`, `JWT_SECRET`, and `CLIENT_URL`.
 - `Backend/src/config/db.js`
-  - Connects to MongoDB with Mongoose.
+  - Connects to MongoDB via Mongoose.
 
 ### Backend Dependencies
 
@@ -204,47 +198,118 @@ Frontend/
 ### UI Components
 
 - `Frontend/src/components/Navbar.jsx`
-  - Renders the app title and a `Login` link.
+  - Renders the app title and login navigation.
 - `Frontend/src/components/UrlForm.jsx`
-  - Accepts a long URL and submits it to the backend.
-  - Renders the returned shortened link.
+  - Submits long URLs and displays shortened links.
 - `Frontend/src/components/LoginForm.jsx`
-  - Authenticates users through the backend login endpoint.
+  - Sends login requests to the backend.
 - `Frontend/src/components/RegisterForm.jsx`
-  - Registers new users through the backend register endpoint.
+  - Sends registration requests to the backend.
+
+### Pages
+
 - `Frontend/src/pages/HomePage.jsx`
   - Shows the URL shortener form.
 - `Frontend/src/pages/AuthPage.jsx`
-  - Switches between login and register views.
+  - Toggles between login and registration forms.
 - `Frontend/src/pages/DashboardPage.jsx`
-  - Placeholder dashboard page.
+  - Placeholder protected dashboard page.
 
 ### Routing
 
 - `Frontend/src/routing/routeTree.js`
   - Defines the root route and child routes.
 - `Frontend/src/routing/homepage.js`
-  - Home page route.
+  - `/` route for the home page.
 - `Frontend/src/routing/auth.route.js`
-  - `/auth` route for the auth page.
+  - `/auth` route for authentication.
 - `Frontend/src/routing/dashboard.js`
-  - `/dashboard` route for the dashboard page.
+  - `/dashboard` protected route guarded by auth.
 
 ### API Layer
 
 - `Frontend/src/api/shortUrl.api.js`
-  - Sends URL creation requests to the backend.
+  - Calls `POST /api/create` to generate short URLs.
 - `Frontend/src/api/user.api.js`
-  - Sends login/register requests to the backend.
+  - Calls `POST /api/auth/login` and `POST /api/auth/register`.
+  - Calls `GET /api/auth/me` to retrieve the current user.
+  - Includes `logoutUser()` helper, but no matching backend logout route is implemented.
 - `Frontend/src/utils/axiosInstance.js`
   - Configures the backend base URL from `VITE_BACKEND_URL`.
+  - Enables `withCredentials` for cookie auth.
 
 ### Behavior
 
 - Uses React Query in `Frontend/src/main.jsx`.
-- Submits URLs and displays shortened links.
-- Includes a navbar with auth navigation.
-- Provides login and registration UI flows.
+- Uses `@tanstack/react-router` for client-side routing.
+- The dashboard route is guarded and redirects unauthenticated users to `/auth`.
+
+---
+
+## Setup and Run
+
+### Backend
+
+1. Open `Backend/`
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Create a `.env` file with:
+
+```env
+PORT=3000
+MONGO_URI=mongodb://localhost:27017/url_shortener
+APP_URL=http://localhost:3000
+JWT_SECRET=your_jwt_secret
+CLIENT_URL=http://localhost:5173
+```
+
+4. Start the backend:
+
+```bash
+npm run dev
+```
+
+### Frontend
+
+1. Open `Frontend/`
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Create or verify `.env` with:
+
+```env
+VITE_BACKEND_URL=http://localhost:3000
+```
+
+4. Start the frontend:
+
+```bash
+npm run dev
+```
+
+5. Open the app in the browser (usually `http://localhost:5173`).
+
+---
+
+## Known Limitations
+
+- `logoutUser()` exists in the frontend, but the backend logout endpoint is not implemented.
+- Dashboard page content is still a placeholder.
+- No automated tests are included.
+- URL validation should be reinforced on the backend side.
+
+---
+
+## Notes
+
+This README now matches the current project implementation and structure for the URL shortener application.
 
 ---
 

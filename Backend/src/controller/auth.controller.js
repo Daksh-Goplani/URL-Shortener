@@ -3,7 +3,7 @@ import { registerUser, loginUser } from "../services/auth.service.js"
 
 export const register = async (req, res) => {
     const { name, email, password } = req.body
-    const {token, user} = await registerUser(name, email, password)
+    const { token, user } = await registerUser(name, email, password)
     req.user = user
     res.cookie("accessToken", token, cookieOptions)
     res.status(200).send({
@@ -13,7 +13,7 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
     const { email, password } = req.body
-    const {token, user} = await loginUser(email, password)
+    const { token, user } = await loginUser(email, password)
     req.user = user
     res.cookie("accessToken", token, cookieOptions)
     res.status(200).send({
@@ -22,7 +22,12 @@ export const login = async (req, res) => {
     })
 }
 
+export const getCurrentUser = (req, res) => {
+    return res.status(200).json({ user: req.user })
+}
+
 export default {
     register,
-    login
+    login,
+    getCurrentUser
 }

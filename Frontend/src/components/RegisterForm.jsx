@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { registerUser } from '../api/user.api';
+import { useNavigate } from '@tanstack/react-router';
 
 export default function RegisterForm({ state }) {
   const [name, setName] = useState('');
@@ -11,6 +12,7 @@ export default function RegisterForm({ state }) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,6 +49,7 @@ export default function RegisterForm({ state }) {
       setPassword('');
       setConfirmPassword('');
       console.log('Registration successful:', response);
+      navigate({to: "/dashboard"})
       // Handle successful registration (redirect, etc.)
     } catch (err) {
       setError(err.message || err.response?.data?.message || 'Registration failed. Please try again.');
