@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.routes.js'
 import { attachUser } from './utils/attachUser.js'
 import cookieParser from 'cookie-parser'
 import config from './config/config.js'
+import userRoutes from './routes/user.routes.js'
 
 const app = express()
 app.use(cors({
@@ -19,6 +20,7 @@ app.use(attachUser)
 
 app.use("", shortUrl)
 app.use("/api/auth", authRoutes)
+app.use("/api/user", userRoutes)
 
 app.use(errorHandler)
 

@@ -1,15 +1,20 @@
 import { useState } from "react";
 import { createShortUrl } from "../api/shortUrl.api";
+import { useSelector } from 'react-redux'
+import { QueryClient } from "@tanstack/react-query";
 
 function UrlForm({ onSubmit }) {
   const [url, setUrl] = useState("");
   const [shortUrl, setShortUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [customSlug, setCustomSlug] = useState("")
+  const { isAuthenticated } = useSelector((state) => state.auth)
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const response = await createShortUrl(url)
     setShortUrl(response.shortUrl);
+    QueryClient.invalidateQueries({queryKey: ['userUrls']})
     setCopied(false);
   };
 
@@ -52,6 +57,23 @@ function UrlForm({ onSubmit }) {
           Shorten URL 🚀
         </button>
       </form>
+
+      {isAuthenticated && (
+        <div className="mt-4">
+          <label htmlFor="customSlug" className="block text-sm font-medium text-gray-700 mb-1">
+            Custom URL (optional)
+          </label>
+          <input
+            type="text"
+            id="customSlug"
+            value={customSlug}
+            onChange={(event) => setCustomSlug(event.target.value)}
+            placeholder="Enter custom slug"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      )}
+
       {shortUrl && (
         <div className="max-w-xl mx-auto mt-6">
           <div className="rounded-3xl border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-6 shadow-lg">
@@ -83,8 +105,8 @@ function UrlForm({ onSubmit }) {
                 type="button"
                 onClick={handleCopy}
                 className={`rounded-2xl px-6 py-3 font-semibold transition-all duration-300 ${copied
-                    ? "bg-green-600 text-white"
-                    : "bg-slate-900 text-white hover:bg-slate-800 hover:scale-105"
+                  ? "bg-green-600 text-white"
+                  : "bg-slate-900 text-white hover:bg-slate-800 hover:scale-105"
                   }`}
               >
                 {copied ? "✓ Copied" : "Copy"}
