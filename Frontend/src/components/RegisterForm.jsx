@@ -48,7 +48,6 @@ export default function RegisterForm({ state }) {
       setEmail('');
       setPassword('');
       setConfirmPassword('');
-      console.log('Registration successful:', response);
       navigate({to: "/dashboard"})
       // Handle successful registration (redirect, etc.)
     } catch (err) {

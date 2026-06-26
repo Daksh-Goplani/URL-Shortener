@@ -2,12 +2,12 @@
 
 ## Project Overview
 
-This repository contains a full-stack URL shortening application.
+A full-stack URL shortening application with:
 
-- `Backend/` - Express + MongoDB API for creating short URLs, redirecting them, and handling JWT cookie authentication.
-- `Frontend/` - React + Vite UI for submitting URLs, showing shortened links, and login/register flows.
+- `Backend/` — Express + MongoDB API for creating and redirecting short URLs.
+- `Frontend/` — React + Vite UI for shortening URLs, login/register, and managing saved links.
 
-Users can shorten a URL through the frontend, receive a short link, and the backend redirects visitors from the short code to the original full URL.
+The frontend lets users shorten URLs, view created short links, copy URLs, and see click counts. Logged-in users can use custom slugs and access a protected dashboard.
 
 ---
 
@@ -58,6 +58,7 @@ Frontend/
     components/
       Navbar.jsx
       UrlForm.jsx
+      UserUrl.jsx
       LoginForm.jsx
       RegisterForm.jsx
     pages/
@@ -69,107 +70,55 @@ Frontend/
       dashboard.js
       homepage.js
       routeTree.js
+    store/
+      store.js
+      slice/
+        authSlice.js
     utils/
       axiosInstance.js
+      helper.js
 ```
 
 ---
 
-## Backend Details
+## Backend Overview
 
-### Entry Point
+### Core Features
 
-- `Backend/server.js`
-  - Loads environment variables and starts the application.
-  - Connects to MongoDB via `Backend/src/config/db.js`.
+- Create short URLs and optionally use a custom slug when authenticated.
+- Redirect requests from a short code to the original full URL.
+- Track click counts for each short URL.
+- JWT cookie-based authentication for user sessions.
 
-### Express App
-
-- `Backend/src/app.js`
-  - Configures CORS with `CLIENT_URL` and credentials support.
-  - Parses JSON and URL-encoded bodies.
-  - Uses `cookie-parser`.
-  - Attaches user info from the JWT cookie via `Backend/src/utils/attachUser.js`.
-  - Mounts short URL and auth routes.
-  - Uses centralized error handling.
-
-### Routes
+### Key Routes
 
 - `POST /api/create`
-  - Creates a new shortened URL from `{ url }`.
-  - If a logged-in user provides `slug`, it can be used as a custom short code.
+  - Creates a short URL from `{ url }`.
+  - Supports optional `slug` for authenticated users.
 - `GET /:shortUrl`
-  - Redirects to the original URL for the given short code.
+  - Redirects to the original URL.
 - `POST /api/auth/register`
-  - Registers a new user and sets an `accessToken` cookie.
+  - Creates a new user and issues an `accessToken` cookie.
 - `POST /api/auth/login`
-  - Authenticates a user and sets an `accessToken` cookie.
+  - Logs in a user and issues an `accessToken` cookie.
+- `GET /api/auth/logout`
+  - Clears the auth cookie.
 - `GET /api/auth/me`
-  - Returns the authenticated user when a valid JWT cookie is present.
+  - Returns the current authenticated user.
 
-### Controller Layer
+### Important Backend Files
 
 - `Backend/src/controller/shortUrl.controller.js`
-  - `createShortUrl(req, res)` validates URL input, creates a short URL, and returns the full shortened link.
-  - `redirectToFullUrl(req, res)` finds the original URL and redirects the client.
 - `Backend/src/controller/auth.controller.js`
-  - `register(req, res)` registers a user, issues a JWT cookie, and returns a success message.
-  - `login(req, res)` authenticates a user, issues a JWT cookie, and returns user data.
-  - `getCurrentUser(req, res)` returns the logged-in user object.
-
-### Service Layer
-
 - `Backend/src/services/shortUrl.service.js`
-  - `createShortUrlWithoutUserService(url)` generates a random short code.
-  - `createShortUrlWithUserService(url, userId, slug)` creates a user-linked short URL with optional custom slug support.
 - `Backend/src/services/auth.service.js`
-  - Registers users with hashed passwords.
-  - Validates login credentials.
-  - Signs JWT tokens with payload `{ id: user._id }`.
-
-### Data Access Layer
-
 - `Backend/src/dao/shortUrl.dao.js`
-  - Saves short URLs to MongoDB and links them to a user when provided.
-  - Looks up a short code and increments its click count.
 - `Backend/src/dao/user.dao.js`
-  - Finds users by email or by MongoDB `_id`.
-  - Creates new users.
-
-### Models
-
 - `Backend/src/models/shortUrl.model.js`
-  - `fullUrl` (required string)
-  - `shortUrl` (required unique string)
-  - `clicks` (number, default `0`)
-  - `user` (optional `ObjectId` reference to `User`)
 - `Backend/src/models/user.model.js`
-  - `name` (required string)
-  - `email` (required unique string)
-  - `password` (required string)
-  - `avatar` (optional string with a default image URL)
-
-### Middleware
-
-- `Backend/src/utils/attachUser.js`
-  - Reads `accessToken` cookie, verifies JWT, and sets `req.user`.
 - `Backend/src/middleware/auth.middleware.js`
-  - Protects routes and rejects unauthorized requests with `401`.
-
-### Utilities
-
-- `Backend/src/utils/helper.js`
-  - Generates unique nanoid values for short URLs.
-- `Backend/src/utils/errorHandler.js`
-  - Provides custom error classes and Express error-handling middleware.
-
-### Configuration
-
+- `Backend/src/utils/attachUser.js`
 - `Backend/src/config/config.js`
-  - Loads and validates required environment variables.
-  - Exports `APP_URL`, `MONGO_URI`, `PORT`, `JWT_SECRET`, and `CLIENT_URL`.
-- `Backend/src/config/db.js`
-  - Connects to MongoDB via Mongoose.
 
 ### Backend Dependencies
 
@@ -184,65 +133,49 @@ Frontend/
 
 ---
 
-## Frontend Details
+## Frontend Overview
 
-### Stack
+### Core Features
 
-- React
-- Vite
-- Tailwind CSS
-- Axios
-- `@tanstack/react-query`
-- `@tanstack/react-router`
+- Shorten URLs and display the generated short link.
+- Copy generated short links with a button that changes state temporarily.
+- Login and registration pages with validation and error display.
+- Dashboard with responsive user URL history and click counts.
+- Navbar shows `Login` when unauthenticated and `Logout` when authenticated.
 
-### UI Components
+### Important Frontend Files
 
 - `Frontend/src/components/Navbar.jsx`
-  - Renders the app title and login navigation.
 - `Frontend/src/components/UrlForm.jsx`
-  - Submits long URLs and displays shortened links.
+- `Frontend/src/components/UserUrl.jsx`
 - `Frontend/src/components/LoginForm.jsx`
-  - Sends login requests to the backend.
 - `Frontend/src/components/RegisterForm.jsx`
-  - Sends registration requests to the backend.
-
-### Pages
-
 - `Frontend/src/pages/HomePage.jsx`
-  - Shows the URL shortener form.
 - `Frontend/src/pages/AuthPage.jsx`
-  - Toggles between login and registration forms.
 - `Frontend/src/pages/DashboardPage.jsx`
-  - Placeholder protected dashboard page.
+- `Frontend/src/utils/axiosInstance.js`
+- `Frontend/src/utils/helper.js`
+- `Frontend/src/store/slice/authSlice.js`
+- `Frontend/src/routing/dashboard.js`
 
 ### Routing
 
-- `Frontend/src/routing/routeTree.js`
-  - Defines the root route and child routes.
-- `Frontend/src/routing/homepage.js`
-  - `/` route for the home page.
-- `Frontend/src/routing/auth.route.js`
-  - `/auth` route for authentication.
-- `Frontend/src/routing/dashboard.js`
-  - `/dashboard` protected route guarded by auth.
+- `/` — Home page with hero content and URL shortener form.
+- `/auth` — Authentication page for login/register.
+- `/dashboard` — Protected dashboard page for authenticated users.
 
-### API Layer
+### Frontend Dependencies
 
-- `Frontend/src/api/shortUrl.api.js`
-  - Calls `POST /api/create` to generate short URLs.
-- `Frontend/src/api/user.api.js`
-  - Calls `POST /api/auth/login` and `POST /api/auth/register`.
-  - Calls `GET /api/auth/me` to retrieve the current user.
-  - Includes `logoutUser()` helper, but no matching backend logout route is implemented.
-- `Frontend/src/utils/axiosInstance.js`
-  - Configures the backend base URL from `VITE_BACKEND_URL`.
-  - Enables `withCredentials` for cookie auth.
-
-### Behavior
-
-- Uses React Query in `Frontend/src/main.jsx`.
-- Uses `@tanstack/react-router` for client-side routing.
-- The dashboard route is guarded and redirects unauthenticated users to `/auth`.
+- `@reduxjs/toolkit`
+- `@tailwindcss/vite`
+- `@tanstack/react-query`
+- `@tanstack/react-router`
+- `axios`
+- `react`
+- `react-dom`
+- `react-redux`
+- `redux`
+- `tailwindcss`
 
 ---
 
@@ -250,7 +183,7 @@ Frontend/
 
 ### Backend
 
-1. Open `Backend/`
+1. Open the `Backend/` folder.
 2. Install dependencies:
 
 ```bash
@@ -275,7 +208,7 @@ npm run dev
 
 ### Frontend
 
-1. Open `Frontend/`
+1. Open the `Frontend/` folder.
 2. Install dependencies:
 
 ```bash
@@ -294,22 +227,22 @@ VITE_BACKEND_URL=http://localhost:3000
 npm run dev
 ```
 
-5. Open the app in the browser (usually `http://localhost:5173`).
+5. Open the app in the browser at `http://localhost:5173`.
 
 ---
 
-## Known Limitations
+## Notes and Limitations
 
-- `logoutUser()` exists in the frontend, but the backend logout endpoint is not implemented.
-- Dashboard page content is still a placeholder.
-- No automated tests are included.
-- URL validation should be reinforced on the backend side.
+- A logout route exists in the backend, and the frontend calls it from the navbar.
+- The dashboard and auth flow are implemented, but the UX can be further extended.
+- No automated test suite is included in this repo.
+- Backend URL validation could be strengthened further.
 
 ---
 
-## Notes
+## Summary
 
-This README now matches the current project implementation and structure for the URL shortener application.
+This repo is a working URL shortening app with frontend auth, protected dashboard access, responsive UI, and backend redirect handling.
 
 ---
 

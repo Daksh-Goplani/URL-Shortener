@@ -11,12 +11,10 @@ export const registerUser = async (name, email, password) => {
         throw new ConflictError("User already exists");
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = await userDao.createUser(
         name,
         email,
-        hashedPassword
+        password
     );
 
     const token = jwt.sign(

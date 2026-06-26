@@ -1,21 +1,31 @@
 import { useState } from "react";
 import { createShortUrl } from "../api/shortUrl.api";
 import { useSelector } from 'react-redux'
-import { QueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 function UrlForm({ onSubmit }) {
   const [url, setUrl] = useState("");
   const [shortUrl, setShortUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [customSlug, setCustomSlug] = useState("")
+  const [errorMessage, setErrorMessage] = useState("")
   const { isAuthenticated } = useSelector((state) => state.auth)
+  const queryClient = useQueryClient()
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await createShortUrl(url)
-    setShortUrl(response.shortUrl);
-    QueryClient.invalidateQueries({queryKey: ['userUrls']})
-    setCopied(false);
+    setErrorMessage("")
+
+    try {
+      const response = await createShortUrl(url, customSlug.trim() || undefined)
+      setShortUrl(response.shortUrl);
+      queryClient.invalidateQueries(['userUrls'])
+      setCopied(false);
+    } catch (error) {
+      setErrorMessage(error.message || 'Unable to shorten URL. Please try again.')
+      setShortUrl("")
+      setCopied(false)
+    }
   };
 
   const handleCopy = async () => {
@@ -71,6 +81,12 @@ function UrlForm({ onSubmit }) {
             placeholder="Enter custom slug"
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="max-w-xl mx-auto mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {errorMessage}
         </div>
       )}
 

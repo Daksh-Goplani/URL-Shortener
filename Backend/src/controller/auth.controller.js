@@ -26,8 +26,30 @@ export const getCurrentUser = (req, res) => {
     return res.status(200).json({ user: req.user })
 }
 
+export const logout = async (req, res) => {
+    try {
+        res.clearCookie("accessToken", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Logged out successfully",
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong",
+            error: error.message,
+        });
+    }
+};
+
 export default {
     register,
     login,
-    getCurrentUser
+    getCurrentUser,
+    logout
 }

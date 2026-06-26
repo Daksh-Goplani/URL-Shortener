@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken'
 
 export const attachUser = async (req, res, next) => {
     const token = req.cookies.accessToken
-    console.log(token, 'token')
     if (!token) return next()
 
     try {

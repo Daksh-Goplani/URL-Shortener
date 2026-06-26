@@ -15,7 +15,6 @@ export const createShortUrl = async (req, res, next) => {
             throw new BadRequestError("URL is required")
         }
         let shortUrl
-        console.log(req.user, 'req user')
         if (req.user) {
             shortUrl = await createShortUrlWithUserService(data.url, req.user._id, data?.slug)
         } else {
