@@ -304,15 +304,6 @@ npm run dev
 
 ---
 
-## Current Limitations
-
-- Login and register UI exist, but protected route handling and post-login redirects are not fully wired.
-- URL validation is still primarily frontend-side and should be reinforced on the backend.
-- The dashboard route exists, but the dashboard feature is not fully implemented.
-- No test suite is included.
-
----
-
 ## Notes
 
 This README now reflects the current project state with backend auth routes and frontend auth UI. The backend can create and redirect short URLs and supports JWT cookie authentication; the frontend renders the shortener form, auth page, and navbar navigation.
