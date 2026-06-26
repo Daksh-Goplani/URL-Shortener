@@ -9,6 +9,7 @@ const UserUrl = () => {
     refetchInterval: 30000, // Refetch every 30 seconds to update click counts
     staleTime: 0, // Consider data stale immediately so it refetches when invalidated
   })
+  const backendUrl = import.meta.env.VITE_BACKEND_URL 
   const [copiedId, setCopiedId] = useState(null)
   const handleCopy = async (url, id) => {
     try {
@@ -89,12 +90,12 @@ const UserUrl = () => {
                 </td>
                 <td className="px-6 py-4 align-top">
                   <a
-                    href={`http://localhost:3000/${url.shortUrl}`}
+                    href={`${backendUrl}/${url.shortUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-900 hover:underline break-words"
                   >
-                    {`localhost:3000/${url.shortUrl}`}
+                    {`${backendUrl.replace(/^https?:\/\//, '')}/${url.shortUrl}`}
                   </a>
                 </td>
                 <td className="px-6 py-4 align-top">
@@ -105,7 +106,7 @@ const UserUrl = () => {
                 <td className="px-6 py-4 align-top">
                   <button
                     type="button"
-                    onClick={() => handleCopy(`http://localhost:3000/${url.shortUrl}`, url._id)}
+                    onClick={() => handleCopy(`${backendUrl}/${url.shortUrl}`, url._id)}
                     className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold text-white transition duration-200 ${
                       copiedId === url._id
                         ? 'bg-emerald-600 hover:bg-emerald-700'
@@ -128,12 +129,12 @@ const UserUrl = () => {
             <div className="mb-4 text-sm text-slate-900 break-words">{url.fullUrl}</div>
             <div className="mb-3 text-sm text-slate-500">Short URL</div>
             <a
-              href={`http://localhost:3000/${url.shortUrl}`}
+              href={`${backendUrl}/${url.shortUrl}`}
               target="_blank"
               rel="noopener noreferrer"
               className="mb-4 block text-sm font-medium text-blue-600 hover:text-blue-900 hover:underline break-words"
             >
-              {`localhost:3000/${url.shortUrl}`}
+              {`${backendUrl.replace(/^https?:\/\//, '')}/${url.shortUrl}`}
             </a>
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800">
@@ -141,7 +142,7 @@ const UserUrl = () => {
               </span>
               <button
                 type="button"
-                onClick={() => handleCopy(`http://localhost:3000/${url.shortUrl}`, url._id)}
+                onClick={() => handleCopy(`${backendUrl}/${url.shortUrl}`, url._id)}
                 className={`rounded-full px-4 py-2 text-xs font-semibold text-white transition duration-200 ${
                   copiedId === url._id
                     ? 'bg-emerald-600 hover:bg-emerald-700'
